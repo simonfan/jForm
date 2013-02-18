@@ -1,0 +1,27 @@
+#test {
+	
+}
+
+#test ul {
+	list-style: none;
+	padding: 0 0 0 0;
+	margin: 0 0 0 0;
+}
+
+#test ul li {
+	float: left;
+	display: block;
+}
+
+#test ul li label {
+	font-size: 10pt;
+}
+
+#test ul li .field {
+	clear: both;
+	width: 100px;
+}
+
+#linebreak {
+	clear: left;
+}
