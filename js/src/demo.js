@@ -22,6 +22,7 @@ define(['app'], function(jForm) {
 	rows.push({
 		name: 'nome',
 		labelName: 'Nome',
+		default: 'meu nome',
 		type: 'text'
 	});
 	
@@ -40,16 +41,16 @@ define(['app'], function(jForm) {
 	rows.push([
 		{
 			name: 'input-select',
-			default: 'default input value',
+			default: 'third',
 			labelName: 'label-tes ddddt',
 			type: 'select',
 			options: [ 'first', 'second', { label: 'tres!', value: 'third' }]
 		},{
 			name: 'input-select-2',
-			default: 'default eeee value',
+			default: 'abacaxi',
 			labelName: 'label-tes ddddt',
 			type: 'select',
-			options: [ 'banana', 'sss' ],
+			options: [ 'banana', 'abacaxi', 'uva' ],
 			inputCss: {
 				backgroundColor: '#fff'
 			}
@@ -59,11 +60,11 @@ define(['app'], function(jForm) {
 	rows.push([
 		{
 			name: 'checkblock-test',
-			default: 'check-1',
+			default: ['check-2','check-0'],
 			labelName: 'Checkblock test',
 			type: 'checkblock',
 			options: [ 'check-0', 'check-1', 'check-2'],
-			labelR: true
+			labelL: false
 		},
 		{
 			name: 'radioblock-test',
@@ -71,7 +72,7 @@ define(['app'], function(jForm) {
 			labelName: 'Radio numbers!',
 			type: 'radioblock',
 			options: ['radio-2','radio-3','radio-4'],
-			labelR: false
+			labelL: true
 		}
 	]);
 

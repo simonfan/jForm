@@ -26,8 +26,7 @@ function(   $   , Backbone , underscore , jfill) {
 		});
 		
 		return true;
-	}
-	
+	};
 	
 	_.mixin({
 		capitalize : function(string) {
@@ -48,13 +47,13 @@ function(   $   , Backbone , underscore , jfill) {
 	var Templates = {};
 	
 	Templates.textarea = function(info) {
-		return '<textarea name="' + info.name + '"></textarea>';
+		return '<textarea class="input" name="' + info.name + '"></textarea>';
 	};
 	
 	Templates.select = function(info) {
 		var select = [];
 		
-		select.push('<select name="' + info.name + '">');
+		select.push('<select class="select" name="' + info.name + '">');
 		
 		_.each(info.options, function(option) {
 			var value = (typeof option === 'string') ? option : option.value,
@@ -68,25 +67,25 @@ function(   $   , Backbone , underscore , jfill) {
 	};
 	
 	Templates.text = function(info) {
-		return '<input name="' + info.name + '" type="text">'
+		return '<input class="input" name="' + info.name + '" type="text">'
 	};
 	
 	Templates.block = function(type, info) {
 		var block = [],
 				name = info.name,
-				labelR = info.labelR;
+				labelL = info.labelL;
 		
-		block.push('<ul>');
+		block.push('<ul class="block">');
 		
 		_.each(info.options, function(option) {
 			var value = (typeof option === 'string') ? option : option.value,
 					label = option.label || _(value).capitalize(),
-					optionLabel = '<label for="' + info.name + '">'+ label +'</label>';
+					optionLabel = '<label class="label" for="' + info.name + '">'+ label +'</label>';
 			
-			block.push('<li>');
-				if (!labelR) { block.push(optionLabel) }
-				block.push('<input type="'+ type +'" value="' + value + '" name="'+ info.name +'">');
-				if (labelR) { block.push(optionLabel) }
+			block.push('<li class="block-item">');
+				if (!labelL) { block.push(optionLabel) }
+				block.push('<input class="input" type="'+ type +'" value="' + value + '" name="'+ info.name +'">');
+				if (labelL) { block.push(optionLabel) }
 			block.push('</li>');
 		});
 		
@@ -128,8 +127,6 @@ function(   $   , Backbone , underscore , jfill) {
 	});
 	
 	Form.View = Backbone.View.extend({
-		tagName: 'ul',
-		
 		initialize: function(options) {
 			_.bindAll(this);
 			
@@ -150,14 +147,29 @@ function(   $   , Backbone , underscore , jfill) {
 			this._setEvents();
 		},
 		
+		// .fill() fills the form fields
+		fill: function(hash) {
+			var fillHash = {};
+			
+			_.each(hash, function(value, index) {
+				var selector = '[name="'+ index + '"]';
+				fillHash[selector] = value;
+			});
+			
+			this.$list.jFill(fillHash);
+		},
+		
 		_getOpt: function(opt, data) {
-			return data[opt] || this.jForm.get(opt);
+			return data ? data[opt] || this.jForm.get(opt) : this.jForm.get(opt);
 		},
 		
 		// a form is composed by rows
 		render: function() {
 			var formFields = [],
 					_this = this;
+			
+			// instantiate the list
+			this.$list = $('<ul class="field-list"></ul>').appendTo(this.$el);
 			
 			_.each(this.rows, function(row, index) {
 				formFields = _.union(formFields, _this._row(row) );
@@ -167,17 +179,20 @@ function(   $   , Backbone , underscore , jfill) {
 				// save reference to each field input
 				_this.fields.push(field);
 				
-				_this.$el.append(field.html.li);
+				_this.$list.append(field.html.li);
 			});
 			
+			// apply styles
+			this._applyStylesheets();
+			
 			// after appending all fields, append a clear-float
-			this.$el.append('<li style="clear: both;"></li>');
+			this.$list.append('<li style="clear: both;"></li>');
 		},
 		
 		_setEvents: function() {
 			var _this = this;
 			
-			this.$el.find('input').change(this._handleChange);
+			this.$list.find('input').change(this._handleChange);
 		},
 		
 		_handleChange: function(e) {
@@ -188,7 +203,21 @@ function(   $   , Backbone , underscore , jfill) {
 			if (target.prop('type') != 'checkbox') {
 				this.Model.set(name, val);
 			} else {
-				this.Model.set(val, target.prop('checked') );
+				
+				var checked = target.prop('checked'),
+						checkedArr = this.Model.get(name) || [];
+				
+				// and set the checkbox group array
+				if (checked) {
+					checkedArr.push(val);
+					
+					// clone the old array, in order to trigger a change event on the form model
+					checkedArr = _.clone(checkedArr);
+				} else {
+					checkedArr = _.without(checkedArr, val);
+				}
+				
+				this.Model.set(name, checkedArr);
 			}
 		},
 		
@@ -214,8 +243,7 @@ function(   $   , Backbone , underscore , jfill) {
 		// field is the data object passed in to instantiate a field
 		// 'first' is a boolean indicating whether the field is the first of the line
 		_field: function(field_data, first) {
-			var li = $('<li></li>'),
-					fieldCss = this._getOpt('fieldCss', field_data),
+			var li = $('<li class="field"></li>'),
 					label = this._label(field_data),
 					input = this._input(field_data);
 					
@@ -223,27 +251,20 @@ function(   $   , Backbone , underscore , jfill) {
 			
 			// if it is a line-opener
 			if (first) {
-				fieldCss = _.extend({}, fieldCss, { clear: 'both' });
+				li.css({ clear: 'both' });
 			}
-			
-			li.css(fieldCss);
 			
 			var html = {
 				li: li,
 				label: label,
 				input: input
-			}
+			};
 			
 			return _.extend({ html: html }, field_data);
 		},
 		
 		_input: function(field_data) {
-			var input = $( Templates[field_data.type](field_data) ),
-					inputCss = this._getOpt('inputCss', field_data);
-			
-			if (inputCss) {
-				input.css(inputCss);
-			}
+			var input = $( Templates[field_data.type](field_data) );
 			
 			return input;
 		},
@@ -255,17 +276,22 @@ function(   $   , Backbone , underscore , jfill) {
 					labelName = field_data.labelName || _(field_data.name).capitalize();
 			
 			if (labelStyle == 'top') {
-				label = $('<label>' + labelName + '</label><br>');
+				label = $('<label class="label">' + labelName + '</label><br>');
 			} else if (labelStyle == 'side') {
-				label = $('<label>' + labelName + '</label>');
-			}
-			
-			if (label && labelCss) {
-				label.css(labelCss);
+				label = $('<label class="label">' + labelName + '</label>');
 			}
 			
 			return label;
 		},
+		
+		_applyStylesheets: function() {
+			var stylesheets = this._getOpt('stylesheets'),
+					_this = this;
+			
+			_.each(stylesheets, function(css, selector) {
+				_this.$el.find(selector).css(css);
+			})
+		}
 		
 		
 	});
@@ -301,21 +327,52 @@ function(   $   , Backbone , underscore , jfill) {
 		labelName: 'your labelName here',
 		labelStyle: 'top',
 		
-		labelCss: {
-		
-		},
-		
-		ulCss: {
-			listStyle: 'none',
-			padding: '0 0 0 0',
-			margin: '0 0 0 0'
-		},
-		
-		fieldCss: {
-			float: 'left',
-			margin: '5px 5px 5px 5px',
-			padding: '0 0 0 0',
-			fontSize: '12pt'
+		stylesheets: {
+			'.label': {
+				fontSize: '11pt'
+			},
+			'.input': {
+				border: '1px solid #AAAAAA',
+				padding: '3px 3px 3px 3px',
+				margin: '0 0 0 0'
+			},
+			'.select': {
+				border: '1px solid #AAA',
+				width: '100px',
+				padding: '2px 2px 2px 2px',
+				backgroundColor: '#FFF'
+			},
+			'.field-list': {
+				listStyle: 'none',
+				padding: '0 0 0 0',
+				margin: '0 0 0 0'
+			},
+			'.field': {
+				lineHeight: '11pt',
+				float: 'left',
+				margin: '3px 5px 3px 5px',
+				padding: '0 0 0 0',
+				fontSize: '12pt'
+			},
+			'.block': {
+				listStyle: 'none',
+				padding: '0 0 0 0',
+				margin: '4px 0 0 0'
+			},
+			'.block-item': {
+				textAlign: 'center',
+				margin: '4px 0 4px 0',
+				fontSize: '11pt'
+			},
+			'.block-item *': {
+				verticalAlign: 'middle',
+			},
+			'.block-item .input': {
+				margin: '0 5px 0 5px'
+			},
+			'.block-item .label': {
+				fontSize: '11pt'
+			},
 		},
 		
 		Model: Form.Model,
@@ -344,23 +401,19 @@ function(   $   , Backbone , underscore , jfill) {
 		this.basicBuild();
 		
 		this.View = new this.options.View({
-			el: this.$formUl,
+			el: this.$form,
 			rows: this.rows,
 			jForm: this,
 			Model: this.Model
 		});
+		
+		// after instantiating the view, set it with the default values
+		this.View.fill(this.fields);
+		
 	};
 	
 	jForm.prototype.basicBuild = function() {
-		var ulCss = this.get('ulCss');
-		
 		this.$form = $('<form></form>');
-		this.$formUl = $('<ul></ul>').appendTo(this.$form);
-		
-		if (ulCss) {
-			this.$formUl.css(ulCss);
-		}
-		
 		this.$frame.append(this.$form);
 	};
 	

@@ -1,3 +1,11 @@
+/* ------------------------------------------------ *\
+	jFill
+	
+	jQuery plugin for filling up html elements with data in an intelligent manner.
+	
+	version: 1.0.0
+\* ------------------------------------------------ */
+
 define(['jquery'], function($) {
 		
 	// This var holds functions that try to place data TAG-wisely.
@@ -21,19 +29,26 @@ define(['jquery'], function($) {
 					break;
 					
 				case 'checkbox':
-					var filter;
+					var checkFunc;
 					
 					if (typeof value === 'string') {
-						filter = function() {
-							return $(this).val() == value;
+						checkFunc = function(el) {
+							return $(el).val() == value;
 						}
-					} else {
-						filter = function() {
-							return $.inArray( $(this).val(), value) > -1;
+					} else if ( _.isArray(value) ) {
+						checkFunc = function(el) {
+							return $.inArray( $(el).val(), value) > -1;
 						}
 					}
 					
-					$el.filter(filter).attr('checked', true);
+					$el.each(function(index, el) {
+						if ( checkFunc(el) ) {
+							$(el).prop('checked',true);
+						} else {
+							$(el).prop('checked',false);
+						}
+					});
+					
 					break;
 			}
 		},
@@ -44,22 +59,9 @@ define(['jquery'], function($) {
 		}
 	};
 	
-	var selectorFuncs = {
-		id: function(hash) {
-			return '#' + hash;
-		},
-		'class': function(hash) {
-			return '.' + hash;
-		},
-		attr: function(hash, attrName) {
-			return '[' + attrName + '="' + hash + '"]';
-		}
-	};
-	
 	// The jFill function receives as first parameter a hash containing
-	// { fieldName: fieldValue }. The fieldName will be matched according to the
-	// 'identifier' (id, class or attr). If no identifier is passed, the default 
-	// identifier is the 'id'.
+	// { selector: fieldValue }. The selector is used to find the element to
+	// be filled
 	
 	// If the identifier passed is 'attr', you must provide an 'attrName' to be
 	// checked against.
@@ -68,7 +70,7 @@ define(['jquery'], function($) {
 	// the function will assume that the element of the jquery selection should 
 	// be filled in directly, so it will be passed to the 'tagFuncs',
 	// which decide the right action to apply when told to 'fillIn' a html tag.
-	function jFill(value_or_values, identifier, attrName) {
+	function jFill(value_or_values) {
 		var _this = this;
 		
 		if (typeof value_or_values === 'string' || $.isArray(value_or_values) ) {
@@ -77,11 +79,9 @@ define(['jquery'], function($) {
 				
 			func(this, value_or_values);
 		} else if (typeof value_or_values === 'object') {
-			var buildSelector = selectorFuncs[identifier] || selectors['id'];
 			
-			$.each(value_or_values, function(index, value) {
-				var selector = buildSelector(index, attrName),
-					element = _this.find(selector);
+			$.each(value_or_values, function(selector, value) {
+				var element = _this.find(selector);
 					
 				element.jFill(value);
 			});
