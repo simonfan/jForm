@@ -1,9 +1,8 @@
 /* ------------------------------------------------ *\
 	jFill
-	
 	jQuery plugin for filling up html elements with data in an intelligent manner.
 	
-	version: 1.0.0
+	version: 1.0.1
 \* ------------------------------------------------ */
 
 define(['jquery'], function($) {
@@ -12,11 +11,18 @@ define(['jquery'], function($) {
 	// You may modify the default behaviour by calling 
 	// .jFill('customize', tagName, function($el, val) { });
 	var tagFuncs = {
-		'default': function($el, value) { $el.html(value); },
-		'IMG': function($el, value) { $el.attr('src', value); },
-		'SCRIPT': function($el, value) { $el.attr('src', value); },
-		'TEXTAREA': function($el, value) { $el.val( value ) },
+		'default': function($el, value) {
+			// trigger a change event when changing the innerHTML
+			$el.html(value).trigger('change');
+		},
+		'IMG': function($el, value) {
+			// trigger a change event when changing the image src
+			$el.attr('src', value).trigger('change');
+		},
+		'TEXTAREA': function($el, value) { $el.val( value ).trigger('change'); },
 		'INPUT': function($el, value) {
+			// always remember: $el may be a collection of inputs
+			
 			switch( $el.attr('type') ) {
 				case 'text':
 					$el.val(value);
@@ -51,12 +57,19 @@ define(['jquery'], function($) {
 					
 					break;
 			}
+					
+			$el.trigger('change');
 		},
 		'SELECT': function($el, value) {
 			$el.find('option').filter(function() {
 				return $(this).val() == value;	
 			}).attr('selected', true);
-		}
+			
+			$el.trigger('change');
+		},
+		
+		// errors
+		'SCRIPT': function($el, value) { throw new Error('Are you sure you want to fill in a <script> tag? If so, provide us your custom fill in function'); }
 	};
 	
 	// The jFill function receives as first parameter a hash containing

@@ -121,6 +121,7 @@ function(   $   , Backbone , underscore , jfill) {
 		},
 		
 		_handleChange: function(model, options) {
+			console.log('changes');
 			console.log(this.changed);
 		}
 		
@@ -395,8 +396,7 @@ function(   $   , Backbone , underscore , jfill) {
 		this.fieldObjects = _.flatten(this.rows);
 		this.fields = this.extractFieldValues();
 		
-		this.Model = new this.options.Model(this.fields, { jForm: this });
-		
+		this.Model = new this.options.Model({}, { jForm: this });
 		
 		this.basicBuild();
 		
@@ -409,7 +409,6 @@ function(   $   , Backbone , underscore , jfill) {
 		
 		// after instantiating the view, set it with the default values
 		this.View.fill(this.fields);
-		
 	};
 	
 	jForm.prototype.basicBuild = function() {
