@@ -8,7 +8,8 @@ require.config({
 		'utils': 'lib/utils',
 		'app': 'src/app',
 		
-		'jfill': 'lib/jfill',
+		'jread': 'src/jread',
+		'jfill': 'src/jfill',
 		
 		'demo': 'src/demo',
 		
