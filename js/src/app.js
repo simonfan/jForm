@@ -4,30 +4,6 @@ function(   $   , Backbone , underscore , jfill) {
 	////////////////////////////////////
 	////////// UTILS ///////////////////
 	////////////////////////////////////
-	
-	// validates any object by verifying properties and respective typeofs
-	function validateObj(obj, props) {
-		/*
-			props:
-				prop: typeof prop (str)
-		*/
-		
-		_.each(props, function(expected_type, prop_name) {
-			
-			if (!obj[prop_name]) {
-				throw new Error("There is no '" + prop_name + "' in " + obj);
-			}
-			
-			var actual_type = typeof obj[prop_name];
-			
-			if (actual_type != expected_type) {
-				throw new TypeError("The property '" + prop_name + "' from " + obj + " is not a '" + expected_type + "' but a '" + actual_type + "'");
-			}
-		});
-		
-		return true;
-	};
-	
 	_.mixin({
 		capitalize : function(string) {
     	return string.charAt(0).toUpperCase() + string.substring(1).toLowerCase();
@@ -53,7 +29,7 @@ function(   $   , Backbone , underscore , jfill) {
 	Templates.select = function(info) {
 		var select = [];
 		
-		select.push('<select class="select" name="' + info.name + '">');
+		select.push('<select class="input select" name="' + info.name + '">');
 		
 		_.each(info.options, function(option) {
 			var value = (typeof option === 'string') ? option : option.value,
@@ -193,32 +169,23 @@ function(   $   , Backbone , underscore , jfill) {
 		_setEvents: function() {
 			var _this = this;
 			
-			this.$list.find('input').change(this._handleChange);
+			this.$list.find('.input').change(this._handleChange);
 		},
 		
 		_handleChange: function(e) {
 			var target = $(e.target),
-					name = target.attr('name'),
-					val = target.val();
+					name = target.attr('name');
 			
 			if (target.prop('type') != 'checkbox') {
-				this.Model.set(name, val);
+				this.Model.set(name, target.val() );
 			} else {
 				
-				var checked = target.prop('checked'),
-						checkedArr = this.Model.get(name) || [];
+				var $boxes = this.$list.find('input[name="'+ name +'"]:checked'),
+						values = _.map($boxes, function(box, index) {
+							return $(box).val();
+						});
 				
-				// and set the checkbox group array
-				if (checked) {
-					checkedArr.push(val);
-					
-					// clone the old array, in order to trigger a change event on the form model
-					checkedArr = _.clone(checkedArr);
-				} else {
-					checkedArr = _.without(checkedArr, val);
-				}
-				
-				this.Model.set(name, checkedArr);
+				this.Model.set(name, values);
 			}
 		},
 		

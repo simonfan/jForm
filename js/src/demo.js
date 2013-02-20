@@ -47,7 +47,7 @@ define(['app'], function(jForm) {
 			options: [ 'first', 'second', { label: 'tres!', value: 'third' }]
 		},{
 			name: 'input-select-2',
-			default: 'abacaxi',
+			default: 'uva',
 			labelName: 'label-tes ddddt',
 			type: 'select',
 			options: [ 'banana', 'abacaxi', 'uva' ],
